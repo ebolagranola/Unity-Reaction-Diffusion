@@ -158,7 +158,7 @@ MonoBehaviour:
   mat: {fileID: 2100000, guid: c9c36fde945fff146a1cb9e808cb174d, type: 2}
   feed: 0.0381
   kill: 0.06131
-  clamp: 0.695
+  clamp: 0.5
   backgroundColor: {r: 1, g: 1, b: 1, a: 0}
   foregroundColor: {r: 0, g: 0, b: 0, a: 0}
   resolution: 1024

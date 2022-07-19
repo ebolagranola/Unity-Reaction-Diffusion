@@ -1,3 +1,5 @@
+using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 public class ReactionDiffusion : MonoBehaviour
@@ -41,6 +43,9 @@ public class ReactionDiffusion : MonoBehaviour
         runShader();
         swap();
     }
+    private void LateUpdate()
+    {
+    }
 
     void handleInput()
     {
@@ -70,18 +75,8 @@ public class ReactionDiffusion : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.S))
         {
-            Debug.Log("S key was pressed.");
+            saveTexture2D(toTexture2D(tex));
         }
-    }
-
-    int GetIndex(float mouseLocX, float mouseLocY)
-    {
-        int xWrap = Mathf.FloorToInt(mouseLocX) % resolution;
-        int yWrap = Mathf.FloorToInt(mouseLocY) % resolution;
-        if (xWrap < 0) xWrap += resolution;
-        if (yWrap < 0) yWrap += resolution;
-
-        return (yWrap * resolution) + xWrap;
     }
 
     void initShader()
@@ -137,9 +132,43 @@ public class ReactionDiffusion : MonoBehaviour
         next = tmp;
     }
 
+    int GetIndex(float mouseLocX, float mouseLocY)
+    {
+        int xWrap = Mathf.FloorToInt(mouseLocX) % resolution;
+        int yWrap = Mathf.FloorToInt(mouseLocY) % resolution;
+        if (xWrap < 0) xWrap += resolution;
+        if (yWrap < 0) yWrap += resolution;
+
+        return (yWrap * resolution) + xWrap;
+    }
+
     public void Release()
     {
         bufferGrid.Release();
         bufferNext.Release();
+    }
+
+    public Texture2D toTexture2D(RenderTexture rTex)
+    {
+        Texture2D dest = new Texture2D(rTex.width, rTex.height);
+        RenderTexture.active = rTex;
+        dest.ReadPixels(new Rect(0, 0, rTex.width, rTex.height), 0, 0);
+        return dest;
+    }
+
+    public void saveTexture2D(Texture2D tex2Save)
+    {
+        var path = EditorUtility.SaveFilePanel(
+        "Save texture as PNG",
+        "",
+        "diffusion.png",
+        "png");
+
+        if (path.Length != 0)
+        {
+            byte[] pngData = tex2Save.EncodeToPNG();
+            if (pngData != null)
+                File.WriteAllBytes(path, pngData);
+        }
     }
 }
