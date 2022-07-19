@@ -1,0 +1,58 @@
+#pragma kernel Diffuse
+
+RWTexture2D<half4> Result;
+StructuredBuffer<half2> bufferGrid;
+RWStructuredBuffer<half2> bufferNext;
+uint res;
+half feed;
+half kill;
+half clamp;
+half3 backgroundColor;
+half3 foregroundColor;
+
+uint GetIndex(uint x, uint y) {
+    return ((((res + y) % res) * res) + x);
+}
+
+[numthreads(8, 8, 1)]
+void Diffuse(uint3 id : SV_DispatchThreadID)
+{
+    half dA = 1.0f;
+    half dB = 0.5f;
+    half edgeVal = 0.2f;
+    half cornerVal = 0.05f;
+    half a = bufferGrid[GetIndex(id.x, id.y)].x;
+    half b = bufferGrid[GetIndex(id.x, id.y)].y;
+
+    half sumA = 0.0f;
+    sumA += -bufferGrid[GetIndex(id.x, id.y)].x;
+    sumA += bufferGrid[GetIndex(id.x - 1, id.y)].x * edgeVal;
+    sumA += bufferGrid[GetIndex(id.x + 1, id.y)].x * edgeVal;
+    sumA += bufferGrid[GetIndex(id.x, id.y + 1)].x * edgeVal;
+    sumA += bufferGrid[GetIndex(id.x, id.y - 1)].x * edgeVal;
+    sumA += bufferGrid[GetIndex(id.x - 1, id.y - 1)].x * cornerVal;
+    sumA += bufferGrid[GetIndex(id.x + 1, id.y - 1)].x * cornerVal;
+    sumA += bufferGrid[GetIndex(id.x + 1, id.y + 1)].x * cornerVal;
+    sumA += bufferGrid[GetIndex(id.x - 1, id.y + 1)].x * cornerVal;
+    half sumB = 0.0f;
+    sumB += -bufferGrid[GetIndex(id.x, id.y)].y;
+    sumB += bufferGrid[GetIndex(id.x - 1, id.y)].y * edgeVal;
+    sumB += bufferGrid[GetIndex(id.x + 1, id.y)].y * edgeVal;
+    sumB += bufferGrid[GetIndex(id.x, id.y + 1)].y * edgeVal;
+    sumB += bufferGrid[GetIndex(id.x, id.y - 1)].y * edgeVal;
+    sumB += bufferGrid[GetIndex(id.x - 1, id.y - 1)].y * cornerVal;
+    sumB += bufferGrid[GetIndex(id.x + 1, id.y - 1)].y * cornerVal;
+    sumB += bufferGrid[GetIndex(id.x + 1, id.y + 1)].y * cornerVal;
+    sumB += bufferGrid[GetIndex(id.x - 1, id.y + 1)].y * cornerVal;
+
+    half ABB = a * b * b;
+    bufferNext[GetIndex(id.x, id.y)].x = a + (dA * sumA) - ABB + (feed * (1 - a));
+    bufferNext[GetIndex(id.x, id.y)].y = b + (dB * sumB) + ABB - ((kill + feed) * b);
+
+    if (saturate(a - b) < clamp) {
+        Result[id.xy] = half4(foregroundColor.x, foregroundColor.y, foregroundColor.z, 1);
+    }
+    else {
+        Result[id.xy] = half4(backgroundColor.x, backgroundColor.y, backgroundColor.z, 1);
+    }
+}
