@@ -1,6 +1,6 @@
-using System.IO;
-using UnityEditor;
 using UnityEngine;
+using System.IO;
+using SFB;
 
 public class ReactionDiffusion : MonoBehaviour
 {
@@ -158,17 +158,10 @@ public class ReactionDiffusion : MonoBehaviour
 
     public void saveTexture2D(Texture2D tex2Save)
     {
-        var path = EditorUtility.SaveFilePanel(
-        "Save texture as PNG",
-        "",
-        "diffusion.png",
-        "png");
-
-        if (path.Length != 0)
-        {
-            byte[] pngData = tex2Save.EncodeToPNG();
-            if (pngData != null)
-                File.WriteAllBytes(path, pngData);
+        byte[] pngData = tex2Save.EncodeToPNG();
+        if (pngData != null) {
+            string path = StandaloneFileBrowser.SaveFilePanel("Save File", "", "diffusion", "png");
+            File.WriteAllBytes(path, pngData);
         }
     }
 }
